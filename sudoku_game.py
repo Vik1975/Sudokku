@@ -241,10 +241,11 @@ class SudokuGame:
         # Configure scroll region after grid is populated
         def configure_scroll_region(event=None):
             canvas.configure(scrollregion=canvas.bbox("all"))
-            # Center the grid horizontally
+            # Center the grid horizontally with left margin for mobile devices
             canvas_width = canvas.winfo_width()
             frame_width = grid_frame.winfo_reqwidth()
-            x_position = max(0, (canvas_width - frame_width) // 2)
+            # Add 20px left margin to prevent truncation on Android
+            x_position = max(20, (canvas_width - frame_width) // 2)
             canvas.coords(canvas_window, x_position, 0)
 
         grid_frame.bind("<Configure>", configure_scroll_region)
