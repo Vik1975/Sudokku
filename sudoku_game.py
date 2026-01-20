@@ -450,19 +450,66 @@ class SudokuGame:
 
     def game_over(self):
         """Handle game over with user-friendly options"""
-        result = messagebox.askyesno(
-            "Game Over",
-            f"You've made {self.max_mistakes} mistakes!\n\n"
-            f"Would you like to:\n"
-            f"• Yes - Restart this puzzle\n"
-            f"• No - Start a new game",
-            icon='warning'
-        )
+        # Create custom dialog
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Game Over")
+        dialog.geometry("400x250")
+        dialog.configure(bg="white")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
 
-        if result:  # Yes - restart same puzzle
+        # Center the dialog
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (250 // 2)
+        dialog.geometry(f"400x250+{x}+{y}")
+
+        # Message
+        msg_frame = tk.Frame(dialog, bg="white")
+        msg_frame.pack(pady=30, padx=20)
+
+        title_label = tk.Label(msg_frame, text="⚠️ Game Over",
+                              font=("Arial", 20, "bold"),
+                              bg="white", fg="#f44336")
+        title_label.pack()
+
+        msg_label = tk.Label(msg_frame,
+                            text=f"You've made {self.max_mistakes} mistakes!\n\nWhat would you like to do?",
+                            font=("Arial", 12),
+                            bg="white", fg="#333",
+                            justify="center")
+        msg_label.pack(pady=10)
+
+        # Buttons
+        btn_frame = tk.Frame(dialog, bg="white")
+        btn_frame.pack(pady=10)
+
+        def restart_lost():
+            dialog.destroy()
             self.restart_game()
-        else:  # No - go to welcome screen for new game
+
+        def new_game():
+            dialog.destroy()
             self.show_welcome_screen()
+
+        restart_btn = tk.Button(btn_frame, text="Restart the Lost Game",
+                               font=("Arial", 13, "bold"),
+                               bg="#FF9800", fg="white",
+                               width=20, height=2,
+                               relief=tk.FLAT,
+                               cursor="hand2",
+                               command=restart_lost)
+        restart_btn.pack(pady=5)
+
+        new_game_btn = tk.Button(btn_frame, text="Start a New Game",
+                                font=("Arial", 13, "bold"),
+                                bg="#1a73e8", fg="white",
+                                width=20, height=2,
+                                relief=tk.FLAT,
+                                cursor="hand2",
+                                command=new_game)
+        new_game_btn.pack(pady=5)
 
     def restart_game(self):
         """Restart the current game with the same puzzle"""
