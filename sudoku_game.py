@@ -3,6 +3,8 @@ from tkinter import messagebox
 import random
 import copy
 from datetime import datetime
+import json
+import os
 
 class SudokuGame:
     def __init__(self, root):
@@ -28,6 +30,16 @@ class SudokuGame:
             "Hard": 50,
             "Expert": 55
         }
+
+        self.difficulty_scores = {
+            "Easy": 100,
+            "Medium": 200,
+            "Hard": 400,
+            "Expert": 800
+        }
+
+        self.high_scores_file = os.path.join(os.path.dirname(__file__), "high_scores.json")
+        self.high_scores = self.load_high_scores()
 
         self.show_welcome_screen()
 
@@ -68,6 +80,16 @@ class SudokuGame:
                           cursor="hand2",
                           command=lambda d=difficulty: self.start_game(d))
             btn.pack(pady=10)
+
+        # High scores button
+        high_scores_btn = tk.Button(button_frame, text="🏆 High Scores",
+                                   font=("Arial", 16),
+                                   bg="#FFC107", fg="white",
+                                   width=15, height=1,
+                                   relief=tk.FLAT,
+                                   cursor="hand2",
+                                   command=self.show_high_scores)
+        high_scores_btn.pack(pady=20)
 
     def start_game(self, difficulty):
         """Start a new game with selected difficulty"""
@@ -196,9 +218,37 @@ class SudokuGame:
                                    bg="white", fg="#666")
         self.time_label.pack(side="left")
 
-        # Grid frame
-        grid_frame = tk.Frame(main_frame, bg="#344861", bd=3, relief=tk.SOLID)
-        grid_frame.pack(pady=10)
+        # Grid frame - Add scrollbar support for smaller screens
+        grid_container = tk.Frame(main_frame, bg="white")
+        grid_container.pack(pady=10, fill="both", expand=True)
+
+        # Canvas for scrolling on small screens
+        canvas = tk.Canvas(grid_container, bg="white", highlightthickness=0)
+        scrollbar = tk.Scrollbar(grid_container, orient="vertical", command=canvas.yview)
+
+        grid_frame = tk.Frame(canvas, bg="#344861", bd=3, relief=tk.SOLID)
+
+        # Configure canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Create window in canvas
+        canvas_window = canvas.create_window((0, 0), window=grid_frame, anchor="n")
+
+        # Configure scroll region after grid is populated
+        def configure_scroll_region(event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # Center the grid horizontally
+            canvas_width = canvas.winfo_width()
+            frame_width = grid_frame.winfo_reqwidth()
+            x_position = max(0, (canvas_width - frame_width) // 2)
+            canvas.coords(canvas_window, x_position, 0)
+
+        grid_frame.bind("<Configure>", configure_scroll_region)
+        canvas.bind("<Configure>", configure_scroll_region)
 
         # Create 9x9 grid
         for i in range(9):
@@ -371,19 +421,56 @@ class SudokuGame:
     def game_won(self):
         """Handle game won"""
         elapsed = (datetime.now() - self.start_time).seconds
+        score = self.calculate_score(elapsed)
+
         message = f"🎉 Congratulations!\n\n"
         message += f"Difficulty: {self.difficulty}\n"
         message += f"Time: {self.format_time(elapsed)}\n"
-        message += f"Mistakes: {self.mistakes}"
+        message += f"Mistakes: {self.mistakes}\n"
+        message += f"Score: {score}"
+
+        # Save high score
+        self.save_high_score(score, elapsed)
 
         messagebox.showinfo("You Won!", message)
         self.show_welcome_screen()
 
+    def calculate_score(self, time_seconds):
+        """Calculate score based on difficulty, time, and mistakes"""
+        base_score = self.difficulty_scores[self.difficulty]
+
+        # Time bonus: lose points for every minute (max penalty: 50% of base score)
+        time_penalty = min(time_seconds // 60 * 10, base_score // 2)
+
+        # Mistake penalty: -20 points per mistake
+        mistake_penalty = self.mistakes * 20
+
+        final_score = max(base_score - time_penalty - mistake_penalty, 0)
+        return final_score
+
     def game_over(self):
-        """Handle game over"""
-        messagebox.showinfo("Game Over",
-                          f"Too many mistakes!\n\nThe puzzle has been reset.")
-        self.start_game(self.difficulty)
+        """Handle game over with user-friendly options"""
+        result = messagebox.askyesno(
+            "Game Over",
+            f"You've made {self.max_mistakes} mistakes!\n\n"
+            f"Would you like to:\n"
+            f"• Yes - Restart this puzzle\n"
+            f"• No - Start a new game",
+            icon='warning'
+        )
+
+        if result:  # Yes - restart same puzzle
+            self.restart_game()
+        else:  # No - go to welcome screen for new game
+            self.show_welcome_screen()
+
+    def restart_game(self):
+        """Restart the current game with the same puzzle"""
+        self.mistakes = 0
+        self.board = copy.deepcopy(self.initial_board)
+        self.selected_cell = None
+        self.start_time = datetime.now()
+        self.show_game_screen()
 
     def update_timer(self):
         """Update the timer"""
@@ -403,6 +490,109 @@ class SudokuGame:
         for widget in self.root.winfo_children():
             widget.destroy()
         self.root.update()
+
+    def load_high_scores(self):
+        """Load high scores from file"""
+        if os.path.exists(self.high_scores_file):
+            try:
+                with open(self.high_scores_file, 'r') as f:
+                    return json.load(f)
+            except:
+                return []
+        return []
+
+    def save_high_score(self, score, time_seconds):
+        """Save high score and keep only top 10"""
+        high_score_entry = {
+            "score": score,
+            "difficulty": self.difficulty,
+            "time": time_seconds,
+            "mistakes": self.mistakes,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }
+
+        self.high_scores.append(high_score_entry)
+
+        # Sort by score (descending) and keep only top 10
+        self.high_scores.sort(key=lambda x: x["score"], reverse=True)
+        self.high_scores = self.high_scores[:10]
+
+        # Save to file
+        try:
+            with open(self.high_scores_file, 'w') as f:
+                json.dump(self.high_scores, f, indent=2)
+        except Exception as e:
+            print(f"Error saving high scores: {e}")
+
+    def show_high_scores(self):
+        """Display high scores screen"""
+        self.clear_window()
+
+        # Title
+        title = tk.Label(self.root, text="🏆 HIGH SCORES",
+                        font=("Arial", 36, "bold"),
+                        bg="white", fg="#FFC107")
+        title.pack(pady=40)
+
+        # Scores frame
+        scores_frame = tk.Frame(self.root, bg="white")
+        scores_frame.pack(pady=20, padx=40, fill="both", expand=True)
+
+        if self.high_scores:
+            # Header
+            header_frame = tk.Frame(scores_frame, bg="#1a73e8")
+            header_frame.pack(fill="x", pady=(0, 10))
+
+            headers = ["Rank", "Score", "Difficulty", "Time", "Mistakes", "Date"]
+            widths = [5, 8, 10, 8, 10, 15]
+
+            for i, (header, width) in enumerate(zip(headers, widths)):
+                lbl = tk.Label(header_frame, text=header,
+                             font=("Arial", 11, "bold"),
+                             bg="#1a73e8", fg="white",
+                             width=width, anchor="w", padx=5)
+                lbl.grid(row=0, column=i, padx=2, pady=5, sticky="w")
+
+            # Scores
+            for idx, score_entry in enumerate(self.high_scores, 1):
+                row_frame = tk.Frame(scores_frame, bg="#f5f5f5" if idx % 2 == 0 else "white",
+                                   relief=tk.FLAT, bd=1)
+                row_frame.pack(fill="x", pady=2)
+
+                rank_color = "#FFD700" if idx == 1 else "#C0C0C0" if idx == 2 else "#CD7F32" if idx == 3 else "#666"
+
+                data = [
+                    f"#{idx}",
+                    str(score_entry["score"]),
+                    score_entry["difficulty"],
+                    self.format_time(score_entry["time"]),
+                    str(score_entry["mistakes"]),
+                    score_entry["date"]
+                ]
+
+                for i, (value, width) in enumerate(zip(data, widths)):
+                    lbl = tk.Label(row_frame, text=value,
+                                 font=("Arial", 10, "bold" if i == 0 else "normal"),
+                                 bg=row_frame["bg"],
+                                 fg=rank_color if i == 0 else "#333",
+                                 width=width, anchor="w", padx=5)
+                    lbl.grid(row=0, column=i, padx=2, pady=5, sticky="w")
+        else:
+            no_scores = tk.Label(scores_frame,
+                               text="No high scores yet!\nPlay a game to set a record.",
+                               font=("Arial", 16),
+                               bg="white", fg="#999")
+            no_scores.pack(pady=50)
+
+        # Back button
+        back_btn = tk.Button(self.root, text="← Back to Menu",
+                           font=("Arial", 14),
+                           bg="#1a73e8", fg="white",
+                           width=20, height=2,
+                           relief=tk.FLAT,
+                           cursor="hand2",
+                           command=self.show_welcome_screen)
+        back_btn.pack(pady=30)
 
 def main():
     root = tk.Tk()
