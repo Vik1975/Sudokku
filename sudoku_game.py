@@ -226,44 +226,48 @@ class SudokuGame:
         canvas = tk.Canvas(grid_container, bg="white", highlightthickness=0)
         scrollbar = tk.Scrollbar(grid_container, orient="vertical", command=canvas.yview)
 
-        grid_frame = tk.Frame(canvas, bg="#344861", bd=3, relief=tk.SOLID)
+        grid_frame = tk.Frame(canvas, bg="#344861", bd=0, relief=tk.FLAT)
 
         # Configure canvas
         canvas.configure(yscrollcommand=scrollbar.set)
 
         # Pack scrollbar and canvas
         scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True, padx=(20, 0))
+        canvas.pack(side="left", fill="both", expand=True)
 
-        # Create window in canvas with left padding for mobile devices
-        canvas_window = canvas.create_window((20, 0), window=grid_frame, anchor="nw")
+        # Create window in canvas centered
+        canvas_window = canvas.create_window((0, 0), window=grid_frame, anchor="center")
 
         # Configure scroll region after grid is populated
         def configure_scroll_region(event=None):
             canvas.configure(scrollregion=canvas.bbox("all"))
-            # Center the grid horizontally with minimum left margin for mobile devices
+            # Center the grid
             canvas_width = canvas.winfo_width()
+            canvas_height = canvas.winfo_height()
             frame_width = grid_frame.winfo_reqwidth()
-            # Calculate center position but ensure minimum 20px left margin
-            centered_x = (canvas_width - frame_width) // 2
-            x_position = max(20, centered_x)
-            canvas.coords(canvas_window, x_position, 0)
+            frame_height = grid_frame.winfo_reqheight()
+            x_position = canvas_width // 2
+            y_position = canvas_height // 2
+            canvas.coords(canvas_window, x_position, y_position)
 
         grid_frame.bind("<Configure>", configure_scroll_region)
         canvas.bind("<Configure>", configure_scroll_region)
 
+        # Add outer border padding to grid_frame
+        grid_frame.config(padx=2, pady=2)
+
         # Create 9x9 grid
         for i in range(9):
             for j in range(9):
-                # Thicker borders for 3x3 boxes
-                relief_type = tk.SOLID
-                bd = 1
-
-                # Add thicker borders for 3x3 sections
-                padx_left = 3 if j % 3 == 0 and j != 0 else 1
-                padx_right = 3 if j % 3 == 2 and j != 8 else 1
-                pady_top = 3 if i % 3 == 0 and i != 0 else 1
-                pady_bottom = 3 if i % 3 == 2 and i != 8 else 1
+                # Calculate padding for 3x3 box borders
+                # Left border: thick if starting a new box (except first column)
+                padx_left = 2 if j % 3 == 0 and j != 0 else 0
+                # Right border: thin between cells, handled by next cell's left padding
+                padx_right = 0
+                # Top border: thick if starting a new box (except first row)
+                pady_top = 2 if i % 3 == 0 and i != 0 else 0
+                # Bottom border: thin between cells, handled by next cell's top padding
+                pady_bottom = 0
 
                 # Alternating background color for 3x3 boxes
                 box_row = i // 3
@@ -276,13 +280,15 @@ class SudokuGame:
                 cell = tk.Label(grid_frame, text="",
                               font=("Arial", 24),
                               bg=bg_color, fg="#344861",
-                              width=2, height=1,
-                              relief=relief_type, bd=bd)
+                              width=3, height=1,
+                              relief=tk.SOLID, bd=1,
+                              borderwidth=1,
+                              highlightthickness=0)
 
                 cell.grid(row=i, column=j,
                          padx=(padx_left, padx_right),
                          pady=(pady_top, pady_bottom),
-                         ipadx=8, ipady=8)
+                         sticky="nsew")
 
                 if self.initial_board[i][j] != 0:
                     cell.config(text=str(self.initial_board[i][j]),

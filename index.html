@@ -141,13 +141,12 @@
         .sudoku-grid {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
-            gap: 0;
+            gap: 1px;
             border: 3px solid #344861;
             margin: 20px auto;
             width: fit-content;
             background-color: #344861;
-            margin-left: 20px;
-            margin-right: 20px;
+            padding: 1px;
         }
 
         @media (max-width: 600px) {
@@ -243,7 +242,7 @@
             font-weight: bold;
             cursor: pointer;
             background-color: white;
-            border: 1px solid #bbb;
+            border: none;
             transition: background-color 0.2s;
         }
 
@@ -268,14 +267,14 @@
             background-color: #e3f2fd;
         }
 
-        /* Thicker borders for 3x3 boxes */
-        .cell:nth-child(3n) {
-            border-right: 3px solid #344861;
+        /* Thicker gaps for 3x3 boxes using margins */
+        .cell:nth-child(3n):not(:nth-child(9n)) {
+            margin-right: 2px;
         }
 
         .cell:nth-child(n+19):nth-child(-n+27),
         .cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 3px solid #344861;
+            margin-bottom: 2px;
         }
 
         .number-pad {
