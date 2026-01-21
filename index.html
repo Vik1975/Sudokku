@@ -163,14 +163,28 @@
             .sudoku-grid {
                 margin: 10px auto;
                 border: 2px solid #344861;
-                width: 100%;
+                width: fit-content;
                 max-width: 100%;
+                gap: 1px;
             }
 
             .cell {
                 width: 35px;
                 height: 35px;
                 font-size: 16px;
+                min-width: 35px;
+                min-height: 35px;
+                box-sizing: border-box;
+            }
+
+            /* Ensure 3x3 borders work on mobile */
+            .cell:nth-child(3n):not(:nth-child(9n)) {
+                border-right: 2px solid #344861;
+            }
+
+            .cell:nth-child(n+19):nth-child(-n+27),
+            .cell:nth-child(n+46):nth-child(-n+54) {
+                border-bottom: 2px solid #344861;
             }
 
             .number-pad {
