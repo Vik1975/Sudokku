@@ -18,7 +18,7 @@
             background-color: white;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
         }
@@ -154,8 +154,13 @@
                 box-sizing: border-box;
             }
 
-            html, body {
-                padding: 0;
+            html {
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            body {
+                padding: 10px 0;
                 margin: 0;
                 overflow-x: hidden;
                 overflow-y: auto;
@@ -164,42 +169,48 @@
                 min-height: 100vh;
                 height: auto;
                 display: block;
-                align-items: flex-start;
+                align-items: unset;
+                justify-content: unset;
             }
 
             .container {
-                padding: 8px;
-                margin: 0;
+                padding: 10px;
+                margin: 0 auto;
                 border-radius: 0;
                 width: 100%;
-                overflow-x: hidden;
-                overflow-y: visible;
+                max-width: 100%;
+                overflow: visible;
                 min-height: auto;
                 height: auto;
+                box-shadow: none;
             }
 
             .game-screen {
-                overflow-x: hidden;
-                overflow-y: visible;
+                overflow: visible;
                 height: auto;
+                min-height: auto;
             }
 
             .sudoku-grid {
-                margin: 10px auto;
+                margin: 15px auto;
                 border: 2px solid #344861;
                 width: min(340px, calc(100vw - 20px));
                 height: auto;
+                max-height: none;
                 gap: 1px;
                 padding: 0;
                 background-color: #d0d0d0;
                 box-sizing: border-box;
+                overflow: visible;
             }
 
             .cell {
                 width: 100%;
-                aspect-ratio: 1;
+                height: auto;
+                aspect-ratio: 1/1;
                 font-size: 14px;
                 border: none;
+                min-height: 0;
             }
 
             /* Remove extra borders on mobile, use gap instead */
