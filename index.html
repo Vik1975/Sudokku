@@ -27,6 +27,14 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-width: 600px;
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
         }
 
         .welcome-screen {
@@ -136,6 +144,21 @@
             margin: 20px auto;
             width: fit-content;
             background-color: #344861;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .sudoku-grid {
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .cell {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
         }
 
         .cell {
@@ -271,6 +294,92 @@
             to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Toast notification styles */
+        .toast-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .toast {
+            background-color: #f44336;
+            color: white;
+            padding: 25px;
+            border-radius: 10px 10px 0 0;
+            max-width: 500px;
+            width: 90%;
+            margin-bottom: 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .toast-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .toast-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .toast-btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .toast-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .toast-btn.restart {
+            background-color: white;
+            color: #f44336;
+        }
+
+        .toast-btn.new-game-toast {
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
             }
         }
     </style>
@@ -481,8 +590,7 @@
 
                 if (mistakes >= maxMistakes) {
                     setTimeout(() => {
-                        alert('Game Over! Too many mistakes.\n\nThe puzzle will be reset.');
-                        startGame(currentDifficulty, getCurrentCellsToRemove());
+                        showGameOverToast();
                     }, 300);
                 }
             }
@@ -614,6 +722,67 @@
                 'Extreme': 62
             };
             return settings[currentDifficulty] || 35;
+        }
+
+        function showGameOverToast() {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'toast-overlay';
+
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+
+            // Toast title
+            const title = document.createElement('div');
+            title.className = 'toast-title';
+            title.textContent = '⚠️ Too many mistakes!';
+
+            // Toast message
+            const message = document.createElement('div');
+            message.className = 'toast-message';
+            message.textContent = `You've made ${maxMistakes} errors.`;
+
+            // Buttons container
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'toast-buttons';
+
+            // Restart button
+            const restartBtn = document.createElement('button');
+            restartBtn.className = 'toast-btn restart';
+            restartBtn.textContent = 'Restart Game';
+            restartBtn.onclick = () => {
+                overlay.remove();
+                startGame(currentDifficulty, getCurrentCellsToRemove());
+            };
+
+            // New game button
+            const newGameBtn = document.createElement('button');
+            newGameBtn.className = 'toast-btn new-game-toast';
+            newGameBtn.textContent = 'Start New Game';
+            newGameBtn.onclick = () => {
+                overlay.remove();
+                showWelcomeScreen();
+            };
+
+            // Assemble toast
+            buttonsDiv.appendChild(restartBtn);
+            buttonsDiv.appendChild(newGameBtn);
+            toast.appendChild(title);
+            toast.appendChild(message);
+            toast.appendChild(buttonsDiv);
+            overlay.appendChild(toast);
+
+            // Add to body
+            document.body.appendChild(overlay);
+
+            // Close on overlay click
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                    showWelcomeScreen();
+                }
+            };
         }
     </script>
 </body>

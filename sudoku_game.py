@@ -233,19 +233,20 @@ class SudokuGame:
 
         # Pack scrollbar and canvas
         scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
+        canvas.pack(side="left", fill="both", expand=True, padx=(20, 0))
 
-        # Create window in canvas
-        canvas_window = canvas.create_window((0, 0), window=grid_frame, anchor="n")
+        # Create window in canvas with left padding for mobile devices
+        canvas_window = canvas.create_window((20, 0), window=grid_frame, anchor="nw")
 
         # Configure scroll region after grid is populated
         def configure_scroll_region(event=None):
             canvas.configure(scrollregion=canvas.bbox("all"))
-            # Center the grid horizontally with left margin for mobile devices
+            # Center the grid horizontally with minimum left margin for mobile devices
             canvas_width = canvas.winfo_width()
             frame_width = grid_frame.winfo_reqwidth()
-            # Add 20px left margin to prevent truncation on Android
-            x_position = max(20, (canvas_width - frame_width) // 2)
+            # Calculate center position but ensure minimum 20px left margin
+            centered_x = (canvas_width - frame_width) // 2
+            x_position = max(20, centered_x)
             canvas.coords(canvas_window, x_position, 0)
 
         grid_frame.bind("<Configure>", configure_scroll_region)
@@ -377,10 +378,12 @@ class SudokuGame:
 
             # Flash red
             self.cells[(row, col)].config(bg="#ffcdd2")
-            self.root.after(300, lambda: self.select_cell(row, col))
 
             if self.mistakes >= self.max_mistakes:
-                self.game_over()
+                # Show toast after a short delay
+                self.root.after(400, self.game_over)
+            else:
+                self.root.after(300, lambda: self.select_cell(row, col))
 
     def clear_cell(self):
         """Clear the selected cell"""
@@ -450,67 +453,78 @@ class SudokuGame:
         return final_score
 
     def game_over(self):
-        """Handle game over with user-friendly options"""
-        # Create custom dialog
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Game Over")
-        dialog.geometry("400x250")
-        dialog.configure(bg="white")
-        dialog.resizable(False, False)
-        dialog.transient(self.root)
-        dialog.grab_set()
+        """Handle game over with toast notification"""
+        print("game_over called!")  # Debug
 
-        # Center the dialog
-        dialog.update_idletasks()
-        x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
-        y = (dialog.winfo_screenheight() // 2) - (250 // 2)
-        dialog.geometry(f"400x250+{x}+{y}")
+        # Create toast notification at the bottom of the screen
+        toast = tk.Toplevel(self.root)
+        toast.title("")
+        toast.overrideredirect(True)  # Remove window decorations
+        toast.configure(bg="#f44336")
+        toast.attributes('-topmost', True)
+
+        # Position at bottom center of screen
+        toast_width = 500
+        toast_height = 200
+        screen_width = toast.winfo_screenwidth()
+        screen_height = toast.winfo_screenheight()
+        x = (screen_width - toast_width) // 2
+        y = screen_height - toast_height - 80  # 80px from bottom
+        toast.geometry(f"{toast_width}x{toast_height}+{x}+{y}")
+
+        print(f"Toast created at position: {x}, {y}")  # Debug
+        print(f"Screen size: {screen_width}x{screen_height}")  # Debug
+
+        # Main container with padding
+        container = tk.Frame(toast, bg="#f44336")
+        container.pack(fill="both", expand=True, padx=15, pady=15)
 
         # Message
-        msg_frame = tk.Frame(dialog, bg="white")
-        msg_frame.pack(pady=30, padx=20)
-
-        title_label = tk.Label(msg_frame, text="⚠️ Game Over",
-                              font=("Arial", 20, "bold"),
-                              bg="white", fg="#f44336")
-        title_label.pack()
-
-        msg_label = tk.Label(msg_frame,
-                            text=f"You've made {self.max_mistakes} mistakes!\n\nWhat would you like to do?",
-                            font=("Arial", 12),
-                            bg="white", fg="#333",
+        msg_label = tk.Label(container,
+                            text=f"⚠️ Too many mistakes!\nYou've made {self.max_mistakes} errors.",
+                            font=("Arial", 14, "bold"),
+                            bg="#f44336", fg="white",
                             justify="center")
-        msg_label.pack(pady=10)
+        msg_label.pack(pady=(10, 20))
 
-        # Buttons
-        btn_frame = tk.Frame(dialog, bg="white")
-        btn_frame.pack(pady=10)
+        # Buttons frame
+        btn_frame = tk.Frame(container, bg="#f44336")
+        btn_frame.pack(pady=5)
 
         def restart_lost():
-            dialog.destroy()
+            toast.destroy()
             self.restart_game()
 
         def new_game():
-            dialog.destroy()
+            toast.destroy()
             self.show_welcome_screen()
 
-        restart_btn = tk.Button(btn_frame, text="Restart the Lost Game",
-                               font=("Arial", 13, "bold"),
-                               bg="#FF9800", fg="white",
-                               width=20, height=2,
+        # Button 1: Restart the game
+        restart_btn = tk.Button(btn_frame, text="Restart Game",
+                               font=("Arial", 12, "bold"),
+                               bg="white", fg="#f44336",
+                               width=18, height=2,
                                relief=tk.FLAT,
                                cursor="hand2",
+                               activebackground="#ffebee",
+                               activeforeground="#f44336",
                                command=restart_lost)
-        restart_btn.pack(pady=5)
+        restart_btn.pack(side="left", padx=5)
 
-        new_game_btn = tk.Button(btn_frame, text="Start a New Game",
-                                font=("Arial", 13, "bold"),
+        # Button 2: Start new game
+        new_game_btn = tk.Button(btn_frame, text="Start New Game",
+                                font=("Arial", 12, "bold"),
                                 bg="#1a73e8", fg="white",
-                                width=20, height=2,
+                                width=18, height=2,
                                 relief=tk.FLAT,
                                 cursor="hand2",
+                                activebackground="#1565c0",
+                                activeforeground="white",
                                 command=new_game)
-        new_game_btn.pack(pady=5)
+        new_game_btn.pack(side="left", padx=5)
+
+        # Make toast grab focus
+        toast.grab_set()
 
     def restart_game(self):
         """Restart the current game with the same puzzle"""
