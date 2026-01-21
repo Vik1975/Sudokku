@@ -145,8 +145,8 @@
             border: 3px solid #344861;
             margin: 20px auto;
             width: fit-content;
-            background-color: #344861;
-            padding: 1px;
+            background-color: #d0d0d0;
+            padding: 0;
         }
 
         @media (max-width: 600px) {
@@ -267,14 +267,14 @@
             background-color: #e3f2fd;
         }
 
-        /* Thicker gaps for 3x3 boxes using margins */
+        /* Thicker darker borders for 3x3 boxes */
         .cell:nth-child(3n):not(:nth-child(9n)) {
-            margin-right: 2px;
+            border-right: 2px solid #344861;
         }
 
         .cell:nth-child(n+19):nth-child(-n+27),
         .cell:nth-child(n+46):nth-child(-n+54) {
-            margin-bottom: 2px;
+            border-bottom: 2px solid #344861;
         }
 
         .number-pad {
