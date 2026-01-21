@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sudoku Game</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body {
@@ -149,15 +151,85 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+                margin: 0;
+                border-radius: 0;
+            }
+
             .sudoku-grid {
-                margin-left: 20px;
-                margin-right: 20px;
+                margin: 10px auto;
+                border: 2px solid #344861;
+                width: 100%;
+                max-width: 100%;
             }
 
             .cell {
-                width: 40px;
-                height: 40px;
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .number-pad {
+                gap: 8px;
+                margin: 20px auto;
+            }
+
+            .number-btn {
+                width: 45px;
+                height: 45px;
                 font-size: 18px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .control-btn {
+                width: 100%;
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .game-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .game-info {
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .difficulty-tabs {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .difficulty-tab {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            .welcome-screen h1 {
+                font-size: 36px;
+            }
+
+            .welcome-screen p {
+                font-size: 16px;
+                margin-bottom: 30px;
+            }
+
+            .difficulty-btn {
+                padding: 18px;
+                font-size: 18px;
+                margin: 12px 0;
             }
         }
 
