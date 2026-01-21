@@ -174,11 +174,11 @@
             }
 
             .container {
-                padding: 10px;
+                padding: 5px;
                 margin: 0 auto;
                 border-radius: 0;
-                width: 100%;
-                max-width: 100%;
+                width: 100vw;
+                max-width: 100vw;
                 overflow: visible;
                 min-height: auto;
                 height: auto;
@@ -189,12 +189,14 @@
                 overflow: visible;
                 height: auto;
                 min-height: auto;
+                padding: 5px;
             }
 
             .sudoku-grid {
-                margin: 15px auto;
+                margin: 10px auto;
                 border: 2px solid #344861;
-                width: min(340px, calc(100vw - 20px));
+                width: calc(100vw - 24px);
+                max-width: calc(100vw - 24px);
                 height: auto;
                 max-height: none;
                 gap: 1px;
@@ -213,18 +215,19 @@
                 min-height: 0;
             }
 
-            /* Remove extra borders on mobile, use gap instead */
+            /* Thicker gaps for 3x3 boxes on mobile - using box-shadow instead of margins */
             .cell:nth-child(3n):not(:nth-child(9n)) {
-                border-right: none;
-                margin-right: 1px;
-                background-clip: padding-box;
+                box-shadow: 1px 0 0 0 #344861;
             }
 
             .cell:nth-child(n+19):nth-child(-n+27),
             .cell:nth-child(n+46):nth-child(-n+54) {
-                border-bottom: none;
-                margin-bottom: 1px;
-                background-clip: padding-box;
+                box-shadow: 0 1px 0 0 #344861;
+            }
+
+            /* Both horizontal and vertical shadows for corners */
+            .cell:nth-child(3n):not(:nth-child(9n)):is(.cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54)) {
+                box-shadow: 1px 0 0 0 #344861, 0 1px 0 0 #344861;
             }
 
             .number-pad {
